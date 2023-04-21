@@ -1,0 +1,100 @@
+MSI
+Selected Configuration:
+	Protocol: MSI_PRO
+	Trace Directory: experiments/experiment5
+	Num Procs: 8
+	CPU TYPE: FICI_CPU
+	Network Topology: RING_TOP
+	Link Latency: 1
+	Memory Latency: 100
+	Block Size: 6
+Starting simulation
+Simulation complete
+Cycles: 1400
+Cache Misses:           17 misses
+Cache Accesses:         37 accesses
+Silent Upgrades:         0 upgrades
+$-to-$ Transfers:        6 transfers
+Memory Reads:           13 reads
+Memory Writes:           6 writes
+
+MESI
+Selected Configuration:
+	Protocol: MESI_PRO
+	Trace Directory: experiments/experiment5
+	Num Procs: 8
+	CPU TYPE: FICI_CPU
+	Network Topology: RING_TOP
+	Link Latency: 1
+	Memory Latency: 100
+	Block Size: 6
+Starting simulation
+Simulation complete
+Cycles: 1097
+Cache Misses:           18 misses
+Cache Accesses:         37 accesses
+Silent Upgrades:         0 upgrades
+$-to-$ Transfers:        8 transfers
+Memory Reads:           10 reads
+Memory Writes:           5 writes
+
+MOSI
+Selected Configuration:
+	Protocol: MOSI_PRO
+	Trace Directory: experiments/experiment5
+	Num Procs: 8
+	CPU TYPE: FICI_CPU
+	Network Topology: RING_TOP
+	Link Latency: 1
+	Memory Latency: 100
+	Block Size: 6
+Starting simulation
+Simulation complete
+Cycles: 1306
+Cache Misses:           17 misses
+Cache Accesses:         37 accesses
+Silent Upgrades:         0 upgrades
+$-to-$ Transfers:        7 transfers
+Memory Reads:           12 reads
+Memory Writes:           4 writes
+
+MESIF
+Selected Configuration:
+	Protocol: MESIF_PRO
+	Trace Directory: experiments/experiment5
+	Num Procs: 8
+	CPU TYPE: FICI_CPU
+	Network Topology: RING_TOP
+	Link Latency: 1
+	Memory Latency: 100
+	Block Size: 6
+Starting simulation
+Simulation complete
+Cycles: 1059
+Cache Misses:           18 misses
+Cache Accesses:         37 accesses
+Silent Upgrades:         0 upgrades
+$-to-$ Transfers:       11 transfers
+Memory Reads:            9 reads
+Memory Writes:           6 writes
+
+MOESIF
+Selected Configuration:
+	Protocol: MOESIF_PRO
+	Trace Directory: experiments/experiment5
+	Num Procs: 8
+	CPU TYPE: FICI_CPU
+	Network Topology: RING_TOP
+	Link Latency: 1
+	Memory Latency: 100
+	Block Size: 6
+Starting simulation
+Simulation complete
+Cycles: 600
+Cache Misses:           17 misses
+Cache Accesses:         37 accesses
+Silent Upgrades:         0 upgrades
+$-to-$ Transfers:       16 transfers
+Memory Reads:            4 reads
+Memory Writes:           4 writes
+
