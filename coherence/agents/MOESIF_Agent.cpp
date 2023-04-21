@@ -106,14 +106,25 @@ void MOESIF_Agent::do_proc_I(Request *request) {
     switch (request->msg) {
         // If we get a request from the processor we need to get the data
         case LOAD:
-            // TODO: Fill me in
+            send_GETS(request->block);
+            /* The IS state means that we have sent the GETS message and we are now waiting
+             * on DATA
+             */
+            state = MOESIF_CACHE_IS;
+            /* This is a cache miss */
+            sim->cache_misses++;
             break;
         case STORE:
-            // TODO: Fill me in
+            send_GETM(request->block);
+            /* The IM state means that we have sent the GETM message and we are now waiting
+             * on DATA
+             */
+            state = MOESIF_CACHE_IM;
+            /* This is a cache miss */
+            sim->cache_misses++;
             break;
         default:
-            fatal_error("MOESIF_Agent: I state shouldn't see this message from proc: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: I state shouldn't see this message from proc: %s\n", message_t_str[request->msg]);
     }
 }
 
@@ -121,14 +132,18 @@ void MOESIF_Agent::do_proc_S(Request *request) {
     switch (request->msg) {
         // If we get a request from the processor we need to get the data
         case LOAD:
-            // TODO: Fill me in
+            // This is how you respond to the processor
+            send_DATA_proc(request->block);
             break;
         case STORE:
-            // TODO: Fill me in
+            send_GETM(request->block);
+            /* The SM state means that we have sent the GETM message and we are now waiting
+             * for the directory to tell us no one else has the data and we can go to M
+             */
+            state = MOESIF_CACHE_SM;
             break;
         default:
-            fatal_error("MOESIF_Agent: S state shouldn't see this message from proc: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: S state shouldn't see this message from proc: %s\n", message_t_str[request->msg]);
     }
 }
 
@@ -137,11 +152,11 @@ void MOESIF_Agent::do_proc_M(Request *request) {
         // If we get a request from the processor we need to get the data
         case LOAD:
         case STORE:
-            // TODO: Fill me in
+            // This is how you respond to the processor
+            send_DATA_proc(request->block);
             break;
         default:
-            fatal_error("MOESIF_Agent: M state shouldn't see this message from proc: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: M state shouldn't see this message from proc: %s\n", message_t_str[request->msg]);
     }
 }
 
@@ -149,14 +164,15 @@ void MOESIF_Agent::do_proc_E(Request *request) {
     switch (request->msg) {
         // If we get a request from the processor we need to get the data
         case LOAD:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
             break;
         case STORE:
-            // TODO: Fill me in
+            // Request directory to give you upgrade permissions
+            send_GETX(request->block);
+            state = MOESIF_CACHE_EM;
             break;
         default:
-            fatal_error("MOESIF_Agent: E state shouldn't see this message from proc: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: E state shouldn't see this message from proc: %s\n", message_t_str[request->msg]);
     }
 }
 
@@ -164,29 +180,32 @@ void MOESIF_Agent::do_proc_F(Request *request) {
     switch (request->msg) {
         // If we get a request from the processor we need to get the data
         case LOAD:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
             break;
         case STORE:
-            // TODO: Fill me in
+            // Request directory to give you write permissions
+            send_GETM(request->block);
+            state = MOESIF_CACHE_FM;
             break;
         default:
-            fatal_error("MOESIF_Agent: F state shouldn't see this message from proc: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: F state shouldn't see this message from proc: %s\n", message_t_str[request->msg]);
     }
 }
+
 
 void MOESIF_Agent::do_proc_O(Request *request) {
     switch (request->msg) {
         // If we get a request from the processor we need to get the data
         case LOAD:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
             break;
         case STORE:
-            // TODO: Fill me in
+            // This is how you respond to the processor
+            send_GETM(request->block);
+            state = MOESIF_CACHE_OM;
             break;
         default:
-            fatal_error("MOESIF_Agent: O state shouldn't see this message from proc: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: O state shouldn't see this message from proc: %s\n", message_t_str[request->msg]);
     }
 }
 
@@ -208,80 +227,54 @@ void MOESIF_Agent::do_proc_in_transient(Request *request) {
 void MOESIF_Agent::do_ntwk_I(Request *request) {
     switch (request->msg) {
         default:
-            fatal_error("MOESIF_Agent: I state shouldn't see this message from ntwk: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: I state shouldn't see this message from ntwk: %s\n", message_t_str[request->msg]);
     }
 }
 void MOESIF_Agent::do_ntwk_S(Request *request) {
     switch (request->msg) {
         case REQ_INVALID:
-            // TODO: Fill me in
+            send_INVACK(request->block);
+            state = MOESIF_CACHE_I;
             break;
         default:
-            fatal_error("MOESIF_Agent: S state shouldn't see this message from ntwk: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: S state shouldn't see this message from ntwk: %s\n", message_t_str[request->msg]);
     }
 }
 void MOESIF_Agent::do_ntwk_M(Request *request) {
     switch (request->msg) {
         case RECALL_GOTO_I:
-            // TODO: Fill me in
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_I;
             break;
         case RECALL_GOTO_S:
-            // TODO: Fill me in
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_O;
             break;
         default:
-            fatal_error("MOESIF_Agent: M state shouldn't see this message from ntwk: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: M state shouldn't see this message from ntwk: %s\n", message_t_str[request->msg]);
     }
 }
 
 void MOESIF_Agent::do_ntwk_E(Request *request) {
     switch (request->msg) {
         case RECALL_GOTO_I:
-            // TODO: Fill me in
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_I;
             break;
         case RECALL_GOTO_S:
-            // TODO: Fill me in
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_F;
             break;
         default:
-            fatal_error("MOESIF_Agent: E state shouldn't see this message from ntwk: %s\n",
-                        message_t_str[request->msg]);
-    }
-}
-
-void MOESIF_Agent::do_ntwk_F(Request *request) {
-    switch (request->msg) {
-        case RECALL_GOTO_I:
-            // TODO: Fill me in
-            break;
-        case RECALL_GOTO_S:
-            // TODO: Fill me in
-            break;
-        default:
-            fatal_error("MOESIF_Agent: F state shouldn't see this message from ntwk: %s\n",
-                        message_t_str[request->msg]);
-    }
-}
-
-void MOESIF_Agent::do_ntwk_O(Request *request) {
-    switch (request->msg) {
-        case RECALL_GOTO_I:
-            // TODO: Fill me in
-            break;
-        case RECALL_GOTO_S:
-            // TODO: Fill me in
-            break;
-        default:
-            fatal_error("MOESIF_Agent: O state shouldn't see this message from ntwk: %s\n",
-                        message_t_str[request->msg]);
+            fatal_error("MOESIF_Agent: E state shouldn't see this message from ntwk: %s\n", message_t_str[request->msg]);
     }
 }
 
 void MOESIF_Agent::do_ntwk_IM(Request *request) {
     switch (request->msg) {
         case DATA:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
+            state = MOESIF_CACHE_M;
             break;
         default:
             fatal_error("MOESIF_Agent: IM state shouldn't see this message from ntwk: %s\n",
@@ -292,10 +285,12 @@ void MOESIF_Agent::do_ntwk_IM(Request *request) {
 void MOESIF_Agent::do_ntwk_IS(Request *request) {
     switch (request->msg) {
         case DATA:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
+            state = MOESIF_CACHE_S;
             break;
         case DATA_E:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
+            state = MOESIF_CACHE_E;
             break;
         default:
             fatal_error("MOESIF_Agent: IS state shouldn't see this message from ntwk: %s\n",
@@ -306,10 +301,12 @@ void MOESIF_Agent::do_ntwk_IS(Request *request) {
 void MOESIF_Agent::do_ntwk_SM(Request *request) {
     switch (request->msg) {
         case REQ_INVALID:
-            // TODO: Fill me in
+            send_INVACK(request->block);
+            state = MOESIF_CACHE_IM;
             break;
         case ACK:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
+            state = MOESIF_CACHE_M;
             break;
         default:
             fatal_error("MOESIF_Agent: SM state shouldn't see this message from ntwk: %s\n",
@@ -320,13 +317,16 @@ void MOESIF_Agent::do_ntwk_SM(Request *request) {
 void MOESIF_Agent::do_ntwk_EM(Request *request) {
     switch (request->msg) {
         case RECALL_GOTO_I:
-            // TODO: Fill me in
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_IM;
             break;
         case RECALL_GOTO_S:
-            // TODO: Fill me in
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_FM;
             break;
         case ACK:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
+            state = MOESIF_CACHE_M;
             break;
         default:
             fatal_error("MOESIF_Agent: EM state shouldn't see this message from ntwk: %s\n",
@@ -334,16 +334,34 @@ void MOESIF_Agent::do_ntwk_EM(Request *request) {
     }
 }
 
+void MOESIF_Agent::do_ntwk_F(Request *request) {
+    switch (request->msg) {
+        case RECALL_GOTO_I:
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_I;
+            break;
+        case RECALL_GOTO_S:
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_F;
+            break;
+        default:
+            fatal_error("MOESIF_Agent: F state shouldn't see this message from ntwk: %s\n", message_t_str[request->msg]);
+    }
+}
+
 void MOESIF_Agent::do_ntwk_FM(Request *request) {
     switch (request->msg) {
         case RECALL_GOTO_I:
-            // TODO: Fill me in
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_IM;
             break;
         case RECALL_GOTO_S:
-            // TODO: Fill me in
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_FM;
             break;
         case ACK:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
+            state = MOESIF_CACHE_M;
             break;
         default:
             fatal_error("MOESIF_Agent: FM state shouldn't see this message from ntwk: %s\n",
@@ -351,16 +369,33 @@ void MOESIF_Agent::do_ntwk_FM(Request *request) {
     }
 }
 
+void MOESIF_Agent::do_ntwk_O(Request *request) {
+    switch (request->msg) {
+        case RECALL_GOTO_I:
+            send_DATA_dir(request->block);
+            state = MOESIF_CACHE_I;
+            break;
+        case RECALL_GOTO_S:
+            send_DATA_dir(request->block);
+            break;
+        default:
+            fatal_error("MOESIF_Agent: O state shouldn't see this message from ntwk: %s\n",
+                        message_t_str[request->msg]);
+    }
+}
+
 void MOESIF_Agent::do_ntwk_OM(Request *request) {
     switch (request->msg) {
         case RECALL_GOTO_S:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
             break;
         case RECALL_GOTO_I:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
+            state = MOESIF_CACHE_IM;
             break;
         case ACK:
-            // TODO: Fill me in
+            send_DATA_proc(request->block);
+            state = MOESIF_CACHE_M;
             break;
         default:
             fatal_error("MOESIF_Agent: OM state shouldn't see this message from ntwk: %s\n",
